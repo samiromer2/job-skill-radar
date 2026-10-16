@@ -23,3 +23,15 @@ git add .
 git commit -m "Add Postgres, save postings, top skills endpoint"
 git push
 
+
+
+
+docker compose up --build -d
+docker compose ps                 # both db and api should be running
+docker compose logs api           # look for "Application startup complete"
+
+
+docker compose up --build -d      # rebuild after code changes
+docker compose logs -f api        # follow the logs
+docker compose down               # stop everything (data is kept)
+
