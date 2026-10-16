@@ -7,6 +7,19 @@ services:
       POSTGRES_DB: skillradar
     ports: ["5433:5432"]
     volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d skillradar"]
+      interval: 5s
+      retries: 10
+
+  api:
+    build: .
+    ports: ["8000:8000"]
+    environment:
+      DATABASE_URL: postgresql+psycopg://app:app@db:5432/skillradar
+    depends_on:
+      db:
+        condition: service_healthy
 
 volumes:
   pgdata:
