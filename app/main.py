@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from typing import Annotated
 
 from fastapi import Depends, FastAPI
 from pydantic import BaseModel
@@ -17,6 +18,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Job Skill Radar", lifespan=lifespan)
+DbSession = Annotated[Session, Depends(get_db)]
 
 
 class ExtractIn(BaseModel):
@@ -40,7 +42,7 @@ def extract(body: ExtractIn):
 
 
 @app.post("/postings", status_code=201)
-def create_posting(body: PostingIn, db: Session = Depends(get_db)):
+def create_posting(body: PostingIn, db: DbSession):
     skills = sorted(extract_skills(body.text))
     posting = Posting(
         title=body.title,
@@ -54,7 +56,7 @@ def create_posting(body: PostingIn, db: Session = Depends(get_db)):
 
 
 @app.get("/skills/top")
-def top_skills(limit: int = 10, db: Session = Depends(get_db)):
+def top_skills(db: DbSession, limit: int = 10):
     rows = (
         db.execute(
             text("""
