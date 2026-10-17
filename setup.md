@@ -35,3 +35,16 @@ docker compose up --build -d      # rebuild after code changes
 docker compose logs -f api        # follow the logs
 docker compose down               # stop everything (data is kept)
 
+docker ps -a                              # you'll see the odd one, bc2bf6786167
+docker rm -f bc2bf6786167                 # delete that stray container
+docker compose down --remove-orphans      # clean up the project
+docker compose up -d
+docker compose ps                         # db and api should both show "running"
+
+
+conda deactivate
+source .venv/bin/activate
+pip install -r requirements.txt -r requirements-dev.txt
+python -m pytest -v
+
+
