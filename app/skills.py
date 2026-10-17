@@ -9,9 +9,11 @@ SKILLS = {
     "Kubernetes": [r"kubernetes", r"k8s"],
 }
 
+
 def extract_skills(text: str) -> set[str]:
     text = text.lower()
     return {
-        skill for skill, patterns in SKILLS.items()
+        skill
+        for skill, patterns in SKILLS.items()
         if any(re.search(rf"(?<!\w){p}(?!\w)", text) for p in patterns)
     }

@@ -1,7 +1,10 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
 from sqlalchemy import DateTime, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from app.db import Base
+
 
 class Posting(Base):
     __tablename__ = "postings"
@@ -10,9 +13,10 @@ class Posting(Base):
     company: Mapped[str | None] = mapped_column(String(200))
     text: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
     skills: Mapped[list["PostingSkill"]] = relationship(cascade="all, delete-orphan")
+
 
 class PostingSkill(Base):
     __tablename__ = "posting_skills"
