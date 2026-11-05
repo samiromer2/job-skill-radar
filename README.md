@@ -12,7 +12,8 @@ Built with **FastAPI + PostgreSQL + SQLAlchemy**, fully containerized, and cover
 | --- | --- | --- |
 | `/health` | GET | Liveness check |
 | `/extract` | POST | Pull the skills out of a block of posting text (no save) |
-| `/postings` | POST | Save a posting (title, company, text) and its extracted skills |
+| `/postings` | POST | Save a posting (title, company, text, optional `posted_date` and `source_url`) and its extracted skills. Identical text returns 409 |
+| `/postings/import` | POST | Save up to 1,000 postings in one call; postings already stored (same text, ignoring case and spacing) are skipped and counted |
 | `/skills/top` | GET | **The payoff:** rank skills by how many postings mention them, with each skill's share of all postings |
 
 `/skills/top` is a straight SQL aggregation — a `GROUP BY` over the skills table with a percentage computed against the total number of postings:
@@ -72,6 +73,15 @@ curl localhost:8000/skills/top
 # → [{"skill": "Python", "postings": 1, "pct": 100.0}, ...]
 ```
 
+## Importing a folder of postings
+
+[`scripts/import_markdown_postings.py`](scripts/import_markdown_postings.py) reads every `Job Description*.md` file in a folder (`# Title — Company` heading, `**Date posted:**` and `**Posting link:**` fields, `##` sections) and sends them to `/postings/import`. Sections that hold personal notes rather than the posting (fit, tailoring, application notes) are left out.
+
+```bash
+python -m scripts.import_markdown_postings path/to/folder --dry-run   # parse only
+python -m scripts.import_markdown_postings path/to/folder             # import into the running API
+```
+
 ## Tests
 
 ```bash
@@ -83,6 +93,5 @@ pytest -v        # unit tests for skill extraction + API tests
 Early but working. Planned next steps:
 
 - Grow the skill taxonomy beyond the current six (aliases, categories, soft skills).
-- Bulk-import postings from a CSV so a real dataset can be analyzed at once.
 - A notebook / dashboard that charts top skills and how demand shifts over time.
 - De-duplicate near-identical postings before counting.

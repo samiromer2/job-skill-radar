@@ -1,6 +1,6 @@
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 
-from sqlalchemy import DateTime, ForeignKey, String, Text
+from sqlalchemy import Date, DateTime, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
@@ -12,6 +12,10 @@ class Posting(Base):
     title: Mapped[str] = mapped_column(String(200))
     company: Mapped[str | None] = mapped_column(String(200))
     text: Mapped[str] = mapped_column(Text)
+    # sha256 of the normalized text, so the same posting is only counted once
+    text_hash: Mapped[str] = mapped_column(String(64), unique=True)
+    posted_date: Mapped[date | None] = mapped_column(Date)
+    source_url: Mapped[str | None] = mapped_column(String(500))
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
