@@ -23,8 +23,11 @@ app/
   db.py        engine, SessionLocal, Base, get_db; DATABASE_URL env var
   models.py    Posting, PostingSkill (one row per skill per posting)
   skills.py    SKILLS dict + extract_skills() regex matcher
+scripts/
+  import_markdown_postings.py   parses a folder of Markdown postings, drops personal-note sections, POSTs to /postings/import
 tests/
   test_skills.py   extractor unit tests
+  test_import_markdown.py   parser unit tests (synthetic sample, never real postings)
   test_api.py      endpoint tests against a real Postgres
 .github/workflows/ci.yml   test job (Postgres service, ruff, pytest) -> build job (compose up + /health smoke test)
 Dockerfile, .dockerignore, docker-compose.yml (db + api)
@@ -35,7 +38,8 @@ requirements.txt (runtime), requirements-dev.txt (pytest, httpx, ruff)
 
 - `GET /health`
 - `POST /extract` — text in, skills out (no DB)
-- `POST /postings` — save posting (title, company, text) + extracted skills
+- `POST /postings` — save posting (title, company, text, posted_date, source_url) + extracted skills; 409 on duplicate text
+- `POST /postings/import` — up to 1,000 postings; duplicates (by `text_hash`) skipped and counted
 - `GET /skills/top?limit=10` — hand-written aggregation SQL (count + pct of postings)
 
 ## Commands
@@ -60,16 +64,17 @@ ruff format . && ruff check .                   # run before every commit
 
 - Local Postgres is on host port **5433** (another Postgres on the Mac owns 5432). Inside Compose the API uses `db:5432`.
 - Docker Desktop must be running. Start containers only with `docker compose`, never Docker Desktop's Run button (it created a stray container that broke Compose once).
-- Tests currently write into the dev database; a separate test DB is a planned improvement.
+- Tests currently write into the dev database; a separate test DB is a planned improvement. API tests add a uuid to posting text because identical text is rejected.
+- No Alembic: after a model change, `create_all` won't add columns to an existing table. Reset the local DB with `docker compose down -v` (wipes local data).
+- The real postings folder lives outside the repo and contains personal notes. Never commit it, its path, or anything copied from it.
 
 ## Status and next steps
 
-Done: extractor, API, Postgres, Dockerized API, CI pipeline.
+Done: extractor, API, Postgres, Dockerized API, CI pipeline, bulk import (300 real postings load, 119 with a posted date).
 
 Next, in order:
-1. Bulk import endpoint `POST /postings/import` for the user's ~262 real postings. Ask the user what format they are in before designing it.
-2. Expand `SKILLS` dict based on what real postings miss.
-3. Trends over time endpoint.
-4. User skill list + gap score endpoint.
-5. Separate test database; Alembic migrations.
-6. AWS deploy, JWT auth, security scanning, README with architecture diagram.
+1. Expand `SKILLS` dict based on what real postings miss.
+2. Trends over time endpoint.
+3. User skill list + gap score endpoint.
+4. Separate test database; Alembic migrations.
+5. AWS deploy, JWT auth, security scanning, README with architecture diagram.
