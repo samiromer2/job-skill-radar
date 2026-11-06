@@ -27,7 +27,7 @@ jobs:
     env:
       DATABASE_URL: postgresql+psycopg://app:app@localhost:5432/skillradar_test
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -44,7 +44,7 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Build and start with Docker Compose
         run: docker compose up -d --build
       - name: Scan image for vulnerabilities
